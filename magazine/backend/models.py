@@ -1,6 +1,8 @@
+from decimal import Decimal
 from django.db import models
 
 from django.contrib.auth.models import AbstractUser
+
 from django.core.validators import MinValueValidator
 
 TYPE_OF_USER = (
@@ -65,7 +67,7 @@ class Product_positions(models.Model):
     shop = models.ForeignKey(Shop, related_name = "prod_pos_shop",on_delete = models.CASCADE)
     quantity = models.PositiveIntegerField()
     quantity_reserve = models.PositiveIntegerField()
-    price = models.FloatField(validators = [MinValueValidator[0.0]])
+    price = models.FloatField(validators = [MinValueValidator(Decimal('0.0'))])
     
     class Meta:
         verbose_name = "Позиция продукта"
