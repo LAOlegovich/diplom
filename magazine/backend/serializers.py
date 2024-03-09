@@ -17,14 +17,14 @@ class ShopSerializer(rest_framework.serializers.ModelSerializer):
     categories = CategorySerializer(many = True, read_only = True)
     class Meta:
         model = Shop
-        fields = ['name','address','user','categories']
+        fields = ['name','address','user','categories','state']
 
 
 class ProductSerializer(rest_framework.serializers.ModelSerializer):
     category = CategorySerializer(read_only = True)
     class Meta:
         model = Product
-        fields = ['name','description','category']
+        fields = ['name','model','description','category']
 
 
 class ParameterSerializer(rest_framework.serializers.ModelSerializer):
@@ -39,7 +39,7 @@ class Product_positionSerializer(rest_framework.serializers.ModelSerializer):
     product_positions = ParameterSerializer(many = True, read_only = True)
     class Meta:
         model = Product_positions
-        fields = ['product','shop','price','quantity','product_positions']
+        fields = ['product','shop','price','price_rrc','quantity','product_positions']
 
 
 class OrderSerializer(rest_framework.serializers.ModelSerializer):

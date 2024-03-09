@@ -6,15 +6,17 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator
 
 TYPE_OF_USER = (
-    ('1' , 'Обычный'),
-    ('2' , 'Админ'),
-    ('3' ,'Супервайзер'),)
+    ('1' , 'Покупатель'),
+    ('2' , 'Продавец'),
+    ('3' ,'Администратор_площадки'),)
 
 class User(AbstractUser):
-    REQUIRED_FIELDS = []
     type = models.CharField(max_length=1, choices= TYPE_OF_USER, verbose_name = 'Тип пользователя', default = '1')
     telephone = models.CharField(max_length=20)
-    address = models.CharField(max_length=200)
+    city = models.CharField(max_length=40, null = True)
+    street = models.CharField(max_length= 50, null = True)
+    house = models.CharField(max_length = 10, null = True)
+    flat = models.PositiveSmallIntegerField(null = True)
 
     class Meta:
         verbose_name = "Пользователь"
@@ -22,7 +24,7 @@ class User(AbstractUser):
 class Category(models.Model):
     id = models.AutoField(primary_key= True)
     name = models.CharField(max_length = 40, unique = True)
-    slug_name = models.SlugField(max_length = 20)
+    slug_name = models.SlugField(max_length = 20, null = True)
 
     class Meta:
         verbose_name = "Категория"
@@ -34,10 +36,11 @@ class Shop(models.Model):
     id = models.AutoField(primary_key= True)
     name = models.CharField(max_length = 30, unique = True, verbose_name = "Название")
     address = models.TextField(verbose_name = "Адрес")
-    URL = models.URLField(max_length = 256)
-    file_path = models.CharField(max_length = 100)
+    URL = models.URLField(max_length = 256, null = True)
+    file_path = models.CharField(max_length = 100, null = True)
     user = models.ForeignKey(User, related_name = "shops", on_delete = models.CASCADE)
     categories = models.ManyToManyField(Category, related_name = "shops")
+    state = models.BooleanField(default = False, verbose_name = "статус получения товара")
 
     class Meta:
         verbose_name = "Магазин"
@@ -50,7 +53,8 @@ class Shop(models.Model):
 class Product(models.Model):
     id = models.AutoField(primary_key= True)
     name = models.CharField(max_length = 50, unique = True, verbose_name = "Наименование")
-    description = models.TextField(max_length = 200)
+    model = models.CharField(max_length = 30, null = True)
+    description = models.TextField(max_length = 200, null = True)
     category = models.ForeignKey(Category, related_name = "products", on_delete = models.CASCADE)
 
     class Meta:
@@ -65,9 +69,10 @@ class Product_positions(models.Model):
     id = models.AutoField(primary_key= True)
     product = models.ForeignKey(Product, related_name = "prod_param",on_delete = models.CASCADE)
     shop = models.ForeignKey(Shop, related_name = "prod_pos_shop",on_delete = models.CASCADE)
-    quantity = models.PositiveIntegerField()
-    quantity_reserve = models.PositiveIntegerField()
+    quantity = models.PositiveIntegerField(null = False)
+    quantity_reserve = models.PositiveIntegerField(null = False, default = 0)
     price = models.FloatField(validators = [MinValueValidator(Decimal('0.0'))])
+    price_rrc = models.FloatField(validators = [MinValueValidator(Decimal('0.0'))])
     
     class Meta:
         verbose_name = "Позиция продукта"
@@ -108,7 +113,7 @@ class Order(models.Model):
 class Order_rec(models.Model):
     product_position = models.ForeignKey(Product_positions, related_name = "product_record",on_delete = models.CASCADE)
     order = models.ForeignKey(Order, related_name = "order_recs", on_delete = models.CASCADE)
-    quantity = models.PositiveIntegerField()
+    quantity = models.PositiveIntegerField(null = False)
 
     class Meta:
         verbose_name = "Позиция заказа"
