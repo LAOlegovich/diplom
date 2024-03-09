@@ -30,7 +30,7 @@ class ProductSerializer(rest_framework.serializers.ModelSerializer):
 class ParameterSerializer(rest_framework.serializers.ModelSerializer):
     class Meta:
         model = Parameter
-        fields = ['name','value']
+        fields = ['name']
 
 
 class Product_positionSerializer(rest_framework.serializers.ModelSerializer):

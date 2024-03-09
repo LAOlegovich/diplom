@@ -1,0 +1,14 @@
+# примеры API-запросов
+
+@baseUrl = http://127.0.0.1:8000
+
+
+
+# создание пользователя
+POST {{baseUrl}}/updatecatalog
+Content-Type: application/json
+
+{
+  "url": "https://raw.githubusercontent.com/netology-code/pd-diplom/master/data/shop1.yaml"
+}
+###

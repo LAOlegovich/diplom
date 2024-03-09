@@ -73,6 +73,7 @@ class Product_positions(models.Model):
     quantity_reserve = models.PositiveIntegerField(null = False, default = 0)
     price = models.FloatField(validators = [MinValueValidator(Decimal('0.0'))])
     price_rrc = models.FloatField(validators = [MinValueValidator(Decimal('0.0'))])
+    params = models.ManyToManyField("Parameter", through= "ProductParams")
     
     class Meta:
         verbose_name = "Позиция продукта"
@@ -82,15 +83,32 @@ class Product_positions(models.Model):
     
 
 class Parameter(models.Model):
+    id = models.AutoField(primary_key= True)
     name = models.CharField(max_length = 30, unique = True, verbose_name = "Название")
-    value = models.CharField(max_length = 30)
-    product_params = models.ManyToManyField(Product_positions, related_name= "product_positions")
+
 
     class Meta:
         verbose_name ="Параметры продукции"
 
     def __str__(self):
         return self.name
+
+
+class ProductParams(models.Model):
+    product_position = models.ForeignKey(Product_positions, verbose_name = "инфа о позиции продукции",
+                                         related_name = "product_params", 
+                                         on_delete = models.CASCADE
+                                         )
+    parameter = models.ForeignKey(Parameter, verbose_name = "Параметр",
+                                  related_name = "product_params",
+                                  on_delete = models.CASCADE
+                                  )
+    value = models.CharField(max_length =50, verbose_name = "Значение параметра")
+
+    class Meta:
+        verbose_name = "Параметр"
+        constraints = [models.UniqueConstraint(fields = ['product_position','parameter'],
+                                               name = 'unic_prod_param')]
 
 STAT_OF_ORDER = (
     ('1' , 'Предзаказ'),
