@@ -28,12 +28,19 @@ class CategoryView(ListAPIView):
 
 
 class UploadCatalog(APIView):
-
+    """ Обновление каталога магазина"""
+#Необходимо понимать, что обновлять каталог магазина может только администратор или владелец записи магазина,
+  #  иначе получается анархия, еже ли магазина до этого на площадке не было, то welcome!
     def post(self,request, *args, **kwargs):
         URL = request.data.get('url')
         if URL:
             data = load_yaml(get(URL).content, Loader = Loader)
-            print(data)
+
+            id_user = Shop.objects.filter(name = data['shop']).values_list('user_id', flat=True)
+#как раз то самое условие, про которое написано выше, 3 тип -администратор площадки.
+            if request.user.type == ('1') or request.user.type == ('2') and request.user.id != id_user and id_user.first() is not None:
+                return JsonResponse({'Status':'Bad request', 
+                                     'Error':'Пользователь не имеет полномочий на проведение запрошенного действия'})
             shop_obj, _ = Shop.objects.get_or_create(name = data['shop'], user_id = request.user.id)
             for category in data['categories']:
                 cat_obj, _ = Category.objects.get_or_create(id= category['id'], name = category['name'])
@@ -57,7 +64,7 @@ class UploadCatalog(APIView):
                                              )
             return JsonResponse({'Status': 'OK'})
         else:
-            return JsonResponse({'Status':'Bad request', 'Error':'Не правильный файл'})
+            return JsonResponse({'Status':'Bad request', 'Error':'Неправильная структура файла'})
 
 
 
