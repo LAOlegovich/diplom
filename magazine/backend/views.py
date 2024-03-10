@@ -41,13 +41,12 @@ class UploadCatalog(APIView):
                 cat_obj.save()
             Product_positions.objects.filter(shop_id = shop_obj.id).delete()
             for el in data['goods']:
-                prod_obj,_ = Product.objects.get_or_create(name = el['name'], category_id= el['category'])
+                prod_obj,_ = Product.objects.get_or_create(name = el['name'], category_id= el['category'],model = el['model'])
                 prod_pos_obj = Product_positions.objects.create(
                     product_id = prod_obj.id,
-                    model = el['model'],
                     price = el['price'],
                     price_rrc = el['price_rrc'],
-                    quantity = el['quaintity'],
+                    quantity = el['quantity'],
                     shop_id = shop_obj.id
                 )
             for name_,value_ in el['parameters'].items():

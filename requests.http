@@ -7,6 +7,7 @@
 # создание пользователя
 POST {{baseUrl}}/updatecatalog
 Content-Type: application/json
+Authorization: Token fdefd6d43950704c7044579325f29b5f634463bb
 
 {
   "url": "https://raw.githubusercontent.com/netology-code/pd-diplom/master/data/shop1.yaml"
