@@ -14,7 +14,8 @@ from pathlib import Path
 
 import environ
 
-root = environ.Path(__file__) - 3  # get root of the project
+root = environ.Path(__file__)-3
+  # get root of the project
 env = environ.Env()
 environ.Env.read_env()  # reading .env file
 
@@ -141,7 +142,7 @@ AUTH_USER_MODEL = 'backend.User'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # EMAIL_USE_TLS = True
 
-EMAIL_HOST = env.str('EMAIL_HOST')
+EMAIL_HOST = env.str('EMAIL_HOST', default= 'smtp.gmail.com')
 
 EMAIL_HOST_USER = env.str('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = env.str('EMAIL_HOST_PASSWORD')
