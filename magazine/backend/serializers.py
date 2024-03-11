@@ -5,7 +5,7 @@ import rest_framework
 class UserSerializer(rest_framework.serializers.ModelSerializer):
     class Meta:
         model = User
-        fields= ['first_name','last_name','email','type']
+        fields= ['username','first_name','last_name','email','type']
 
 class CategorySerializer(rest_framework.serializers.ModelSerializer):
     class Meta:

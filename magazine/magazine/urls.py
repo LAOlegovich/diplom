@@ -17,11 +17,14 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from backend.views import ShopView, CategoryView, UploadCatalog
+from backend.views import ShopView, CategoryView, UploadCatalog, RegisterAccount, ConfirmAccount,LoginAccount
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('categories', CategoryView.as_view(), name = 'view-categories'),
     path('shops', ShopView.as_view(), name = 'view-shops'),
     path('updatecatalog', UploadCatalog.as_view(), name = 'upload-catalog'),
+    path('user/register', RegisterAccount.as_view(), name = 'register-user'),
+    path('user/register/confirm', ConfirmAccount.as_view(),name = 'confirmation-account'),
+    path('user/login', LoginAccount.as_view(), name='user-login'),
 ]

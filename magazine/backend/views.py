@@ -6,10 +6,13 @@ from rest_framework.request import Request
 from yaml import load as load_yaml, Loader
 from django.http import JsonResponse
 from requests import get
+from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth import authenticate
+from rest_framework.authtoken.models import Token
 
-from .models import Order_rec, Order, Product, Product_positions, Shop, Category, Parameter, ProductParams
+from .models import Order_rec, Order, Product, Product_positions, Shop, Category, Parameter, ProductParams, ConfirmEmailToken
 
-from .serializers import Order_recSerializer, OrderSerializer, ProductSerializer, Product_positionSerializer, ShopSerializer, CategorySerializer
+from .serializers import Order_recSerializer, OrderSerializer, ProductSerializer, Product_positionSerializer, ShopSerializer, CategorySerializer,UserSerializer
 
 # Create your views here.
 
@@ -69,8 +72,109 @@ class UploadCatalog(APIView):
 
 
 
+class RegisterAccount(APIView):
+    """
+    Для регистрации покупателей
+    """
+
+    # Регистрация методом POST
+
+    def post(self, request, *args, **kwargs):
+        """
+            Process a POST request and create a new user.
+
+            Args:
+                request (Request): The Django request object.
+
+            Returns:
+                JsonResponse: The response indicating the status of the operation and any errors.
+            """
+        # проверяем обязательные аргументы
+        if {'first_name', 'last_name', 'email', 'password'}.issubset(request.data):
+
+            # проверяем пароль на сложность
+            try:
+                validate_password(request.data['password'])
+            except Exception as password_error:
+                error_array = []
+                # noinspection PyTypeChecker
+                for item in password_error:
+                    error_array.append(item)
+                return JsonResponse({'Status': False, 'Errors': {'password': error_array}})
+            else:
+                # проверяем данные для уникальности имени пользователя
+
+                user_serializer = UserSerializer(data=request.data)
+                if user_serializer.is_valid():
+                    # сохраняем пользователя
+                    user = user_serializer.save()
+                    user.set_password(request.data['password'])
+                    user.save()
+                    return JsonResponse({'Status': True})
+                else:
+                    return JsonResponse({'Status': False, 'Errors': user_serializer.errors})
+
+        return JsonResponse({'Status': False, 'Errors': 'Не указаны все необходимые аргументы'})
+
+
+class ConfirmAccount(APIView):
+    """
+    Класс для подтверждения почтового адреса
+    """
+
+    # Регистрация методом POST
+    def post(self, request, *args, **kwargs):
+        """
+                Подтверждает почтовый адрес пользователя.
+
+                Args:
+                - request (Request): The Django request object.
+
+                Returns:
+                - JsonResponse: The response indicating the status of the operation and any errors.
+                """
+        # проверяем обязательные аргументы
+        if {'email', 'token'}.issubset(request.data):
+
+            token = ConfirmEmailToken.objects.filter(user__email=request.data['email'],
+                                                     key=request.data['token']).first()
+            if token:
+                token.user.is_active = True
+                token.user.save()
+                token.delete()
+                return JsonResponse({'Status': True})
+            else:
+                return JsonResponse({'Status': False, 'Errors': 'Incorrect token or email'})
+
+        return JsonResponse({'Status': False, 'Errors': 'No all needed arguments'})
 
 
 
+class LoginAccount(APIView):
+    """
+    Класс для авторизации пользователей
+    """
+
+    # Авторизация методом POST
+    def post(self, request, *args, **kwargs):
+        """
+                Authenticate a user.
+
+                Args:
+                    request (Request): The Django request object.
+
+                Returns:
+                    JsonResponse: The response indicating the status of the operation and any errors.
+                """
+        if {'email', 'password'}.issubset(request.data):
+            user = authenticate(request, username=request.data['email'], password=request.data['password'])
+
+            if user is not None:
+                if user.is_active:
+                    token, _ = Token.objects.get_or_create(user=user)
+
+                    return JsonResponse({'Status': True, 'Token': token.key})
+
+            return JsonResponse({'Status': False, 'Errors': 'Not authorize'})
 
 
