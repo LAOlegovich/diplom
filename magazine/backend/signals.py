@@ -44,6 +44,7 @@ def new_user_registered_signal(sender: Type[User], instance: User, created: bool
     """
      отправляем письмо с подтрердждением почты
     """
+    print('working!')
     if created and not instance.is_active:
         # send an e-mail to the user
         token, _ = ConfirmEmailToken.objects.get_or_create(user_id=instance.pk)

@@ -1,4 +1,6 @@
-from .models import Order, Order_rec,Product,Product_positions, Shop,Category, User, Parameter, TYPE_OF_USER
+from rest_framework.exceptions import ValidationError
+
+from .models import Order, Order_rec,Product,Product_positions, Shop,Category, User, Parameter, Location_address,TYPE_OF_USER
 
 import rest_framework
 
@@ -54,3 +56,20 @@ class Order_recSerializer(rest_framework.serializers.ModelSerializer):
         model = Order_rec
         fields = ['id','quantity','product_position','order']
         read_only_fields= ('id',)
+
+class Location_addressSerializer(rest_framework.serializers.ModelSerializer):
+    user = UserSerializer(read_only = True)
+    class Meta:
+        model = Location_address
+        fields = ['user','telephone', 'city','street','house','flat']
+
+    def validate(self, data):
+        """Метод для валидации. Вызывается при создании и обновлении."""
+        _user_id = self.context["request"].user.id
+        _user_type = self.context["request"].user.type
+        Cnt = Location_address.objects.filter(user_id = _user_id).count()
+ 
+        if Cnt >= 5 and _user_type == '1':
+            raise   ValidationError("Превышен лимит на создание адресов покупателей")
+
+        return data

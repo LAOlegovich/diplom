@@ -55,11 +55,14 @@ class User(AbstractUser):
     USERNAME_FIELD = 'email'
     email = models.EmailField(('email address'), unique=True)
     type = models.CharField(max_length=1, choices= TYPE_OF_USER, verbose_name = 'Тип пользователя', default = '1')
-    telephone = models.CharField(max_length=20)
-    city = models.CharField(max_length=40, null = True)
-    street = models.CharField(max_length= 50, null = True)
-    house = models.CharField(max_length = 10, null = True)
-    flat = models.PositiveSmallIntegerField(null = True)
+    is_active = models.BooleanField(
+        ('active'),
+        default=False,
+        help_text=(
+            'Designates whether this user should be treated as active. '
+            'Unselect this instead of deleting accounts.'
+        ),
+    )
 
     class Meta:
         verbose_name = "Пользователь"
@@ -179,7 +182,19 @@ class Order_rec(models.Model):
     class Meta:
         verbose_name = "Позиция заказа"
 
+class Location_address(models.Model):
+    user = models.ForeignKey(User, verbose_name = "user", related_name = "users_addresses", on_delete = models.CASCADE)
+    telephone = models.CharField(max_length=20)
+    city = models.CharField(max_length=40, blank = True)
+    street = models.CharField(max_length= 50, blank = True)
+    house = models.CharField(max_length = 10, blank = True)
+    flat = models.PositiveSmallIntegerField(blank = True)
 
+    class Meta:
+        verbose_name = "Адрес местонахождения пользователя"
+
+    def __str__(self):
+        return f'Users concact telephone is {self.telephone}'
 
 
 class ConfirmEmailToken(models.Model):
