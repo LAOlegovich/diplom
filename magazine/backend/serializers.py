@@ -63,10 +63,16 @@ class Location_addressSerializer(rest_framework.serializers.ModelSerializer):
         model = Location_address
         fields = ['user','telephone', 'city','street','house','flat']
 
+    def create(self, validated_data):
+        """Метод для создания"""
+        validated_data["user"] = self.context["request"].user
+        return super().create(validated_data)
+
     def validate(self, data):
         """Метод для валидации. Вызывается при создании и обновлении."""
-        _user_id = self.context["request"].user.id
-        _user_type = self.context["request"].user.type
+        print(self.context)
+        _user_id = self.context['request'].user.id
+        _user_type = self.context['request'].user.type
         Cnt = Location_address.objects.filter(user_id = _user_id).count()
  
         if Cnt >= 5 and _user_type == '1':

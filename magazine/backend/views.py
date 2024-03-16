@@ -1,8 +1,9 @@
 from django.shortcuts import render
 from rest_framework.generics import ListAPIView
-from rest_framework.response import Response
+from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.request import Request
+from rest_framework.viewsets import ModelViewSet
+from rest_framework.exceptions import MethodNotAllowed
 from yaml import load as load_yaml, Loader
 from django.http import JsonResponse
 from requests import get
@@ -10,10 +11,12 @@ from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 from backend.signals import new_user_registered, new_order
-from .models import Order_rec, Order, Product, Product_positions, Shop, Category, Parameter, ProductParams, ConfirmEmailToken
+from .models import Order_rec, Order, Product, Product_positions, Shop, Category, Parameter, ProductParams, ConfirmEmailToken, Location_address
 
-from .serializers import Order_recSerializer, OrderSerializer, ProductSerializer, Product_positionSerializer, ShopSerializer, CategorySerializer,UserSerializer
+from .serializers import Order_recSerializer, OrderSerializer, ProductSerializer, Product_positionSerializer, ShopSerializer, CategorySerializer,UserSerializer,\
+    Location_addressSerializer
 
+import json
 # Create your views here.
 
 class ShopView(ListAPIView):
@@ -43,7 +46,7 @@ class UploadCatalog(APIView):
 #как раз то самое условие, про которое написано выше, 3 тип -администратор площадки.
             if request.user.type == ('1') or request.user.type == ('2') and request.user.id != id_user and id_user.first() is not None:
                 return JsonResponse({'Status':'Bad request', 
-                                     'Error':'Пользователь не имеет полномочий на проведение запрошенного действия'})
+                                     'Error':'User has no rights'})
             shop_obj, _ = Shop.objects.get_or_create(name = data['shop'], user_id = request.user.id)
             for category in data['categories']:
                 cat_obj, _ = Category.objects.get_or_create(id= category['id'], name = category['name'])
@@ -67,7 +70,7 @@ class UploadCatalog(APIView):
                                              )
             return JsonResponse({'Status': 'OK'})
         else:
-            return JsonResponse({'Status':'Bad request', 'Error':'Неправильная структура файла'})
+            return JsonResponse({'Status':'Bad request', 'Error':'Incorrect structure of file'})
 
 
 
@@ -178,3 +181,14 @@ class LoginAccount(APIView):
             return JsonResponse({'Status': False, 'Errors': 'Not authorize'})
 
 
+class Location_addressView(ModelViewSet):
+    """ 
+        Вьюсет для управления адресами пользователей,
+        обновление адреса заблокировано - делать через два действия: удаления и создания вновь
+    """
+
+    queryset = Location_address.objects.all()
+    serializer_class = Location_addressSerializer
+
+    def update(self, request, *args, **kwargs):
+        raise MethodNotAllowed('PATCH,PUT')

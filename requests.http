@@ -7,7 +7,7 @@
 # 
 POST {{baseUrl}}/updatecatalog
 Content-Type: application/json
-Authorization: Token fdefd6d43950704c7044579325f29b5f634463bb
+Authorization: Token 4f88de02ff8d92c8ea1b08c1ecd6836b9655db30
 
 {
   "url": "https://raw.githubusercontent.com/netology-code/pd-diplom/master/data/shop1.yaml"
@@ -31,7 +31,7 @@ Content-Type: application/json
 
 {
 "email":"lit25111987@gmail.com",
-"password":"pbkdf2_sha256$720000$LK87Qh8Yb6Cij9lB01N1lX$qbotcTZ+jEDsfomvkySFnA/pVqBPn0x8Hkx24Ogl61Y="
+"password":"1234@fdfd"
 }
 ###
 # 
@@ -40,6 +40,31 @@ Content-Type: application/json
 
 {
 "email":"lit25111987@gmail.com",
-"token":"1c81fc2f3fada173a1ae3a1"
+"token":"4f8baf4dd19ddaa1012cf96bc75006a366"
+
+}
+###
+# 
+POST {{baseUrl}}/user-addresses/
+Content-Type: application/json
+Authorization: Token 4f88de02ff8d92c8ea1b08c1ecd6836b9655db30
+
+{
+  "telephone": "+7-905-546-76-54",
+  "city":"kambridge",
+  "street":"trafalgar square",
+  "house":"5",
+  "flat":"305"
+
+}
+###
+
+# 
+DELETE {{baseUrl}}/user-addresses/4/
+Content-Type: application/json
+Authorization: Token 4f88de02ff8d92c8ea1b08c1ecd6836b9655db30
+
+{
+ 
 }
 ###

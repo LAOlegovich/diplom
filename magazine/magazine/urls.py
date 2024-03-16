@@ -17,14 +17,21 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from backend.views import ShopView, CategoryView, UploadCatalog, RegisterAccount, ConfirmAccount,LoginAccount
+from backend.views import ShopView, CategoryView, UploadCatalog, RegisterAccount, ConfirmAccount,LoginAccount,Location_addressView
+
+from rest_framework.routers import DefaultRouter
+from django.urls import path, include
+
+router = DefaultRouter()
+router.register('user-addresses',Location_addressView)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/', include(router.urls)),
     path('categories', CategoryView.as_view(), name = 'view-categories'),
     path('shops', ShopView.as_view(), name = 'view-shops'),
     path('updatecatalog', UploadCatalog.as_view(), name = 'upload-catalog'),
     path('user/register', RegisterAccount.as_view(), name = 'register-user'),
     path('user/register/confirm', ConfirmAccount.as_view(),name = 'confirmation-account'),
-    path('user/login', LoginAccount.as_view(), name='user-login'),
-]
+    path('user/login', LoginAccount.as_view(), name='user-login')
+]+ router.urls
