@@ -18,10 +18,10 @@ POST {{baseUrl}}/user/register
 Content-Type: application/json
 
 {
-"first_name":"Man",
-"username":"O_men",
+"first_name":"Dilara",
+"username":"Woman",
 "last_name":"Dilon",
-"email":"lit25111987@gmail.com",
+"email":"ao-litvinenko@yandex.ru",
 "password":"1234@fdfd"
 }
 ###
@@ -50,21 +50,54 @@ Content-Type: application/json
 Authorization: Token 4f88de02ff8d92c8ea1b08c1ecd6836b9655db30
 
 {
-  "telephone": "+7-905-546-76-54",
+  "telephone": "+7-805-546-76-00",
   "city":"kambridge",
   "street":"trafalgar square",
-  "house":"5",
+  "house":"7",
   "flat":"305"
 
 }
 ###
 
 # 
-DELETE {{baseUrl}}/user-addresses/4/
+DELETE {{baseUrl}}/user-addresses/11/
 Content-Type: application/json
 Authorization: Token 4f88de02ff8d92c8ea1b08c1ecd6836b9655db30
 
 {
  
 }
+###
+# 
+GET {{baseUrl}}/user-addresses/
+Content-Type: application/json
+Authorization: Token 4f88de02ff8d92c8ea1b08c1ecd6836b9655db30
+
+###
+
+# 
+GET {{baseUrl}}/shops/
+Content-Type: application/json
+Authorization: Token 4f88de02ff8d92c8ea1b08c1ecd6836b9655db30
+
+###
+# 
+POST {{baseUrl}}/shops/
+Content-Type: application/json
+Authorization: Token 4f88de02ff8d92c8ea1b08c1ecd6836b9655db30
+
+{
+  "name":"Mamba",
+  "address":"Мытищи, Станционная, 20",
+  "categories": [
+    {"name":"Телефон"}, 
+    {"name": "Ноутбук"}
+    ] 
+}
+###
+# 
+GET {{baseUrl}}/categories/
+Content-Type: application/json
+Authorization: Token 4f88de02ff8d92c8ea1b08c1ecd6836b9655db30
+
 ###

@@ -23,13 +23,13 @@ from rest_framework.routers import DefaultRouter
 from django.urls import path, include
 
 router = DefaultRouter()
-router.register('user-addresses',Location_addressView)
+router.register('user-addresses',Location_addressView, 'view-addresses')
+router.register('shops', ShopView, 'view-shops')
+router.register('categories', CategoryView)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
-    path('categories', CategoryView.as_view(), name = 'view-categories'),
-    path('shops', ShopView.as_view(), name = 'view-shops'),
     path('updatecatalog', UploadCatalog.as_view(), name = 'upload-catalog'),
     path('user/register', RegisterAccount.as_view(), name = 'register-user'),
     path('user/register/confirm', ConfirmAccount.as_view(),name = 'confirmation-account'),

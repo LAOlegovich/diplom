@@ -193,6 +193,7 @@ class Location_address(models.Model):
     class Meta:
         verbose_name = "Адрес местонахождения пользователя"
 
+
     def __str__(self):
         return f'Users concact telephone is {self.telephone}'
 

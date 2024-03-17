@@ -16,18 +16,28 @@ from .models import Order_rec, Order, Product, Product_positions, Shop, Category
 from .serializers import Order_recSerializer, OrderSerializer, ProductSerializer, Product_positionSerializer, ShopSerializer, CategorySerializer,UserSerializer,\
     Location_addressSerializer
 
+from rest_framework.permissions import IsAuthenticated
+
+from .permissions import IsOwnerOrAdmin
+
 import json
 # Create your views here.
 
-class ShopView(ListAPIView):
+class ShopView(ModelViewSet):
     """
     Класс для просмотра списка магазинов
     """
-    queryset = Shop.objects.all()
     serializer_class = ShopSerializer
+    permission_classes = [IsOwnerOrAdmin, IsAuthenticated]
+
+    def get_queryset(self):
+        if self.request.user.type =='3':
+            return Shop.objects.all()
+        else:
+            return  Shop.objects.filter(user_id = self.request.user.id)
 
 
-class CategoryView(ListAPIView):
+class CategoryView(ModelViewSet):
     """ Класс для просмотра списка категорий"""
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
@@ -187,8 +197,14 @@ class Location_addressView(ModelViewSet):
         обновление адреса заблокировано - делать через два действия: удаления и создания вновь
     """
 
-    queryset = Location_address.objects.all()
     serializer_class = Location_addressSerializer
+    permission_classes = [IsOwnerOrAdmin, IsAuthenticated]
+
+    def get_queryset(self):
+        if self.request.user.type =='3':
+            return Location_address.objects.all()
+        else:
+            return  Location_address.objects.filter(user_id = self.request.user.id)
 
     def update(self, request, *args, **kwargs):
         raise MethodNotAllowed('PATCH,PUT')
