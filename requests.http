@@ -87,11 +87,32 @@ Content-Type: application/json
 Authorization: Token 4f88de02ff8d92c8ea1b08c1ecd6836b9655db30
 
 {
-  "name":"Mamba",
+  "name":"Mamba_bunba",
   "address":"Мытищи, Станционная, 20",
   "categories": [
     {"name":"Телефон"}, 
-    {"name": "Ноутбук"}
+    {"name": "Ноутбук_"}
+    ] 
+}
+###
+# 
+DELETE {{baseUrl}}/shops/16/
+Content-Type: application/json
+Authorization: Token 4f88de02ff8d92c8ea1b08c1ecd6836b9655db30
+
+###
+# 
+PATCH {{baseUrl}}/shops/17/
+Content-Type: application/json
+Authorization: Token 4f88de02ff8d92c8ea1b08c1ecd6836b9655db30
+
+{
+  "name":"Mamba_bunba_yes",
+  "address":"Мытищи, Колонцова,2",
+  "categories": [
+    {"name":"Телефон"}, 
+    {"name": "Ноутбук_"},
+    {"name":"Телевизоры", "slug_name":"TV"}
     ] 
 }
 ###

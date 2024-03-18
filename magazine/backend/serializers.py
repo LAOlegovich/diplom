@@ -23,6 +23,8 @@ class CategorySerializer(rest_framework.serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ['name','slug_name']
+        extra_kwargs = {
+            'name': {'validators': []}}
 
 class ShopSerializer(rest_framework.serializers.ModelSerializer):
     user = UserSerializer(read_only = True)
@@ -33,16 +35,34 @@ class ShopSerializer(rest_framework.serializers.ModelSerializer):
         categories = validated_data.pop('categories')
         validated_data["user"] = self.context["request"].user
         #return super().create(validated_data)
-        shop = Shop.objects.create(**validated_data)
+        shop,_ = Shop.objects.get_or_create(**validated_data)
                                              
         for category in categories:
             name_ = category['name']
             slug_name_ = category.get("slug_name")
-            shop.categories.get_or_create(name = name_,  slug_name = slug_name_)
-                 
-                                                                                                                       
+            categ,_ = Category.objects.get_or_create(name = name_,  slug_name = slug_name_)
+            categ.shops.add(shop.id)
+            categ.save()
+                                                                                                                      
         return shop
     
+    def update(self, instance, validated_data):
+        # достаем связанные данные для других таблиц
+        categories = validated_data.pop('categories')
+
+        # обновляем склад по его параметрам
+        shop = super().update(instance, validated_data)
+
+        for category in categories:
+            name_ = category['name']
+            slug_name_ = category.get("slug_name")
+           
+            categ,_=Category.objects.update_or_create(name= name_, slug_name = slug_name_)
+            categ.shops.add(shop.id)
+            categ.save()
+       
+        return shop
+
     def validate(self, data):
         """Метод для валидации. Вызывается при создании и обновлении."""
         _user_type = self.context['request'].user.type
@@ -54,6 +74,8 @@ class ShopSerializer(rest_framework.serializers.ModelSerializer):
     class Meta:
         model = Shop
         fields = ['name','address','user','categories','state']
+        extra_kwargs = {
+            'name': {'validators': []}}
 
 
 class ProductSerializer(rest_framework.serializers.ModelSerializer):
