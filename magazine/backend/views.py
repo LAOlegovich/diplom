@@ -19,8 +19,9 @@ from .serializers import Order_recSerializer, OrderSerializer, ProductSerializer
 from rest_framework.permissions import IsAuthenticated
 
 from .permissions import IsOwnerOrAdmin
+from django_filters.rest_framework import DjangoFilterBackend
+from django.db.models import Q
 
-import json
 # Create your views here.
 
 class ShopView(ModelViewSet):
@@ -208,3 +209,29 @@ class Location_addressView(ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         raise MethodNotAllowed('PATCH,PUT')
+
+
+
+class ProductInfoView(ModelViewSet):
+
+    serializer_class = Product_positionSerializer
+    filter_backends = [DjangoFilterBackend]
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        query = Q(shop__state=True)
+        shop_name = self.request.query_params.get('shop_name')
+        category_name = self.request.query_params.get('category_name')
+
+        if shop_name:
+            query = query & Q(shop__name=shop_name)
+
+        if category_name:
+            query = query & Q(product__category__name=category_name)
+
+        print(Product_positions.objects.filter(query).select_related("shop","product").prefetch_related("params").query)
+
+        return Product_positions.objects.filter(query).select_related("shop","product")\
+        .prefetch_related("product_params__parameter")
+
+

@@ -122,3 +122,10 @@ Content-Type: application/json
 Authorization: Token 4f88de02ff8d92c8ea1b08c1ecd6836b9655db30
 
 ###
+
+# 
+GET {{baseUrl}}/products?category_name=Смартфоны
+Content-Type: application/json
+Authorization: Token 4f88de02ff8d92c8ea1b08c1ecd6836b9655db30
+
+###
