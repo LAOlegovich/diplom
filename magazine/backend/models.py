@@ -67,6 +67,7 @@ class User(AbstractUser):
     class Meta:
         verbose_name = "Пользователь"
 
+
 class Category(models.Model):
     id = models.AutoField(primary_key= True)
     name = models.CharField(max_length = 40, unique = True)
@@ -157,9 +158,11 @@ class ProductParams(models.Model):
                                                name = 'unic_prod_param')]
 
 STAT_OF_ORDER = (
-    ('1' , 'Предзаказ'),
-    ('2' , 'Оформлено'),
-    ('3' , 'Обработано'),
+    ('1' , 'Корзина'),
+    ('2' , 'Новый'),
+    ('3' , 'Подтвержден'),
+    ('4','Доставлен'),
+    ('5','Отменен')
 )  
 
 class Order(models.Model):
@@ -170,7 +173,6 @@ class Order(models.Model):
 
     class Meta:
         verbose_name = "Корзина заказа"
-
 
 
 

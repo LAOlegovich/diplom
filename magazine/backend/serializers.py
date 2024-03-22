@@ -1,6 +1,6 @@
 from rest_framework.exceptions import ValidationError
 
-from .models import Order, Order_rec,Product,Product_positions, Shop,Category, User, Parameter, Location_address,TYPE_OF_USER
+from .models import Order, Order_rec,Product,Product_positions, Shop,Category, User, Parameter, Location_address,ProductParams,TYPE_OF_USER
 
 import rest_framework
 
@@ -84,27 +84,34 @@ class ProductSerializer(rest_framework.serializers.ModelSerializer):
         model = Product
         fields = ['name','model','description','category']
 
-
-class ParameterSerializer(rest_framework.serializers.ModelSerializer):
+class ProductParamsSerializer(rest_framework.serializers.ModelSerializer):
+    parameter = rest_framework.serializers.StringRelatedField()
     class Meta:
-        model = Parameter
-        fields = ['name']
-
+        model = ProductParams
+        fields = ('parameter','value',)
 
 class Product_positionSerializer(rest_framework.serializers.ModelSerializer):
     product = ProductSerializer(read_only = True)
     shop = ShopSerializer(read_only = True)
-    product_positions = ParameterSerializer(many = True, read_only = True)
+    product_params = ProductParamsSerializer(many = True,read_only = True)
+    #params = ParameterSerializer(many = True, read_only = True)
+
     class Meta:
         model = Product_positions
-        fields = ['product','shop','price','price_rrc','quantity','product_positions']
+        fields = ['product','shop','price','price_rrc','quantity','product_params']
+
+    def to_representation(self,obj):   
+        rep= super(Product_positionSerializer,self).to_representation(obj)  
+
+        rep['shop'] = Shop.objects.filter(id=obj.shop_id).values_list('name', flat=True)
+        rep['product'] = Product.objects.filter(id=obj.product_id).select_related("category").values('name', 'model','description',"category__name")
+        return rep
 
 
 class OrderSerializer(rest_framework.serializers.ModelSerializer):
-    user = UserSerializer(read_only = True)
     class Meta:
         model = Order
-        fields =['id','time_order','status','user']
+        fields =['id','time_order','status']
         read_only_fields= ('id','time_order',)
 
 class Order_recSerializer(rest_framework.serializers.ModelSerializer):
@@ -146,3 +153,4 @@ class Location_addressSerializer(rest_framework.serializers.ModelSerializer):
             raise   ValidationError("Превышен лимит на создание адресов покупателей")
 
         return data
+    

@@ -21,6 +21,7 @@ from rest_framework.permissions import IsAuthenticated
 from .permissions import IsOwnerOrAdmin
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q
+from rest_framework.exceptions import ValidationError
 
 # Create your views here.
 
@@ -42,6 +43,7 @@ class CategoryView(ModelViewSet):
     """ Класс для просмотра списка категорий"""
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    permission_classes = [IsAuthenticated]
 
 
 class UploadCatalog(APIView):
@@ -220,18 +222,57 @@ class ProductInfoView(ModelViewSet):
 
     def get_queryset(self):
         query = Q(shop__state=True)
-        shop_name = self.request.query_params.get('shop_name')
-        category_name = self.request.query_params.get('category_name')
+        filter_fields = ['price','price_rrc','quantity','shop__name','product__category__name', 'product__name','product_params__value','product_params__parameter__name']
 
-        if shop_name:
-            query = query & Q(shop__name=shop_name)
+        for param in self.request.GET:
 
-        if category_name:
-            query = query & Q(product__category__name=category_name)
-
-        print(Product_positions.objects.filter(query).select_related("shop","product").prefetch_related("params").query)
+            if param in filter_fields:
+                param_values = self.request.query_params.get(param)
+                kw = {param: param_values}
+                query = query & Q(**kw)
+            else:
+                raise ValidationError(f'Invalid using Filter Fields, you can use this fields:{filter_fields}')
 
         return Product_positions.objects.filter(query).select_related("shop","product")\
-        .prefetch_related("product_params__parameter")
+        .prefetch_related("product_params__parameter").distinct()
 
 
+class BasketView(ModelViewSet):
+    serializer_class = OrderSerializer
+    filter_backends = [DjangoFilterBackend]
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+
+        vals = Order.objects.filter(user_id = self.request.user.id, status = '1').prefetch_related("prod_position").distinct()
+        print(vals.query)
+        if vals.count() != 0:
+            return vals
+        else:
+            res = ValidationError("Корзина пуста!")
+            res.status_code = status.HTTP_204_NO_CONTENT
+            raise res
+
+    def create(self,request):
+        if self.request.user.__getattribute__('type') != '1':
+
+            raise  ValidationError("Только пользователи магазина могут наполнять корзину!")
+        
+        else:
+            items_list = request.data.get('items')
+            basket, _ = Order.objects.get_or_create(user_id=request.user.id, status='1')
+            objects_created = 0
+            for item in items_list:
+                Order_rec.objects.update_or_create(product_position_id = item.get('product_id'), defaults= {"order_id":basket.id, "product_position_id":item.get('product_id'),\
+                                                                                                            "quantity": item.get('quantity')})
+   
+                objects_created += 1
+
+                    
+            return JsonResponse({'Status': True, 'Создано объектов': objects_created})
+       
+
+
+           
+
+    

@@ -124,7 +124,29 @@ Authorization: Token 4f88de02ff8d92c8ea1b08c1ecd6836b9655db30
 ###
 
 # 
-GET {{baseUrl}}/products?category_name=Смартфоны
+GET {{baseUrl}}/products?product_params__value=синий&product_params__parameter__name=Цвет
+Content-Type: application/json
+Authorization: Token 4f88de02ff8d92c8ea1b08c1ecd6836b9655db30
+
+###
+
+# 
+POST {{baseUrl}}/basket/
+Content-Type: application/json
+Authorization: Token 4f88de02ff8d92c8ea1b08c1ecd6836b9655db30
+
+{
+  "items": [
+	{"product_id":  1,	"quantity": 2},
+	{"product_id":  4,	"quantity": 5}
+]
+
+}
+
+###
+
+# 
+GET {{baseUrl}}/basket/
 Content-Type: application/json
 Authorization: Token 4f88de02ff8d92c8ea1b08c1ecd6836b9655db30
 
