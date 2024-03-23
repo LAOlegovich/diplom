@@ -108,17 +108,25 @@ class Product_positionSerializer(rest_framework.serializers.ModelSerializer):
         return rep
 
 
-class OrderSerializer(rest_framework.serializers.ModelSerializer):
-    class Meta:
-        model = Order
-        fields =['id','time_order','status']
-        read_only_fields= ('id','time_order',)
-
 class Order_recSerializer(rest_framework.serializers.ModelSerializer):
     class Meta:
         model = Order_rec
         fields = ['id','quantity','product_position','order']
         read_only_fields= ('id',)
+        extra_kwargs = {
+            'order': {'write_only': True}}
+
+class MyOrder_recSerializer(Order_recSerializer):
+    product_position = Product_positionSerializer(read_only = True)
+
+class OrderSerializer(rest_framework.serializers.ModelSerializer):
+    order_recs = MyOrder_recSerializer(many=True, read_only=True)
+   
+    class Meta:
+        model = Order
+        fields =['id','time_order','status','order_recs']
+        read_only_fields= ('id','time_order',)
+
 
 class Location_addressSerializer(rest_framework.serializers.ModelSerializer):
     user = UserSerializer(read_only = True)

@@ -75,9 +75,9 @@ class UploadCatalog(APIView):
                     quantity = el['quantity'],
                     shop_id = shop_obj.id
                 )
-            for name_,value_ in el['parameters'].items():
-                param_obj, _ = Parameter.objects.get_or_create(name = name_)
-                ProductParams.objects.create(product_position_id = prod_pos_obj.id,
+                for name_,value_ in el['parameters'].items():
+                    param_obj, _ = Parameter.objects.get_or_create(name = name_)
+                    ProductParams.objects.create(product_position_id = prod_pos_obj.id,
                                              parameter_id = param_obj.id,
                                              value = value_
                                              )
@@ -245,7 +245,6 @@ class BasketView(ModelViewSet):
     def get_queryset(self):
 
         vals = Order.objects.filter(user_id = self.request.user.id, status = '1').prefetch_related("prod_position").distinct()
-        print(vals.query)
         if vals.count() != 0:
             return vals
         else:
@@ -256,21 +255,50 @@ class BasketView(ModelViewSet):
     def create(self,request):
         if self.request.user.__getattribute__('type') != '1':
 
-            raise  ValidationError("Только пользователи магазина могут наполнять корзину!")
+            raise  ValidationError("Только под учетной записью клиента магазина можно работать с корзиной!")
         
         else:
             items_list = request.data.get('items')
             basket, _ = Order.objects.get_or_create(user_id=request.user.id, status='1')
             objects_created = 0
             for item in items_list:
-                Order_rec.objects.update_or_create(product_position_id = item.get('product_id'), defaults= {"order_id":basket.id, "product_position_id":item.get('product_id'),\
-                                                                                                            "quantity": item.get('quantity')})
+                Order_rec.objects.get_or_create(product_position_id = item.get('product_id'), \
+                                                   defaults= {"order_id":basket.id, "product_position_id":item.get('product_id'),\
+                                                            "quantity": item.get('quantity')})
    
                 objects_created += 1
 
                     
-            return JsonResponse({'Status': True, 'Создано объектов': objects_created})
-       
+            return JsonResponse({'Status': True, 'Create objects': objects_created})
+        
+    def update(self,request, *args, **kwargs):
+        if self.request.user.__getattribute__('type') != '1':
+
+            raise  ValidationError("Только под учетной записью клиента магазина можно работать с корзиной!")
+        else:
+            items_list = request.data.get('items')
+            basket, _ = Order.objects.get_or_create(user_id=request.user.id, status='1')
+            objects_updated = 0
+            for item in items_list:
+                Order_rec.objects.update_or_create(product_position_id = item.get('product_id'), order_id=basket.id, \
+                                                   defaults= {"quantity": item.get('quantity')})
+   
+                objects_updated += 1
+
+            return JsonResponse({'Status': True, 'Objects updated': objects_updated})
+        
+    def delete(self,request,*args, **kwargs):
+        if self.request.user.__getattribute__('type') != '1':
+
+            raise  ValidationError("Только под учетной записью клиента магазина можно работать с корзиной!")
+        else:
+            items_list = request.data.get('items')
+            objects_deleted = 0
+            for item in items_list:
+                objects_deleted+= Order_rec.objects.prefetch_related('order_recs').\
+                    filter(product_position_id = item, order__user_id = self.request.user.id, order__status ='1').delete()[0]
+
+        return JsonResponse({'Status': True, 'Deleted objects': objects_deleted})
 
 
            

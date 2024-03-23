@@ -129,7 +129,12 @@ Content-Type: application/json
 Authorization: Token 4f88de02ff8d92c8ea1b08c1ecd6836b9655db30
 
 ###
+# 
+GET {{baseUrl}}/basket/
+Content-Type: application/json
+Authorization: Token 4f88de02ff8d92c8ea1b08c1ecd6836b9655db30
 
+###
 # 
 POST {{baseUrl}}/basket/
 Content-Type: application/json
@@ -137,8 +142,8 @@ Authorization: Token 4f88de02ff8d92c8ea1b08c1ecd6836b9655db30
 
 {
   "items": [
-	{"product_id":  1,	"quantity": 2},
-	{"product_id":  4,	"quantity": 5}
+	{"product_id":  9,	"quantity": 2},
+	{"product_id":  11,	"quantity": 5}
 ]
 
 }
@@ -146,8 +151,25 @@ Authorization: Token 4f88de02ff8d92c8ea1b08c1ecd6836b9655db30
 ###
 
 # 
-GET {{baseUrl}}/basket/
+PATCH {{baseUrl}}/basket/1/
 Content-Type: application/json
 Authorization: Token 4f88de02ff8d92c8ea1b08c1ecd6836b9655db30
 
+{
+  "items": [
+	{"product_id":  9,	"quantity": 1},
+	{"product_id":  11,	"quantity": 1}
+]
+
+}
+
+###
+# 
+DELETE {{baseUrl}}/basket/
+Content-Type: application/json
+Authorization: Token 4f88de02ff8d92c8ea1b08c1ecd6836b9655db30
+
+{
+  "items": [9,13]
+}
 ###
