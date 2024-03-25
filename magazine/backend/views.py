@@ -13,14 +13,14 @@ from rest_framework.authtoken.models import Token
 from backend.signals import new_user_registered, new_order
 from .models import Order_rec, Order, Product, Product_positions, Shop, Category, Parameter, ProductParams, ConfirmEmailToken, Location_address
 
-from .serializers import Order_recSerializer, OrderSerializer, ProductSerializer, Product_positionSerializer, ShopSerializer, CategorySerializer,UserSerializer,\
+from .serializers import OrderSerializer, Product_positionSerializer, ShopSerializer, CategorySerializer,UserSerializer,\
     Location_addressSerializer
 
 from rest_framework.permissions import IsAuthenticated
 
 from .permissions import IsOwnerOrAdmin
 from django_filters.rest_framework import DjangoFilterBackend
-from django.db.models import Q
+from django.db.models import Q, F, Sum
 from rest_framework.exceptions import ValidationError
 
 # Create your views here.
@@ -238,13 +238,15 @@ class ProductInfoView(ModelViewSet):
 
 
 class BasketView(ModelViewSet):
+    """ Класс для работы с корзиной пользователя"""
     serializer_class = OrderSerializer
     filter_backends = [DjangoFilterBackend]
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
 
-        vals = Order.objects.filter(user_id = self.request.user.id, status = '1').prefetch_related("prod_position").distinct()
+        vals = Order.objects.filter(user_id = self.request.user.id, status = '1').prefetch_related("order_recs","order_recs__product_position").\
+        annotate(total_sum=Sum(F('order_recs__quantity') * F('order_recs__product_position__price'))).distinct()
         if vals.count() != 0:
             return vals
         else:
@@ -262,11 +264,11 @@ class BasketView(ModelViewSet):
             basket, _ = Order.objects.get_or_create(user_id=request.user.id, status='1')
             objects_created = 0
             for item in items_list:
-                Order_rec.objects.get_or_create(product_position_id = item.get('product_id'), \
+                _,created = Order_rec.objects.get_or_create(product_position_id = item.get('product_id'), \
                                                    defaults= {"order_id":basket.id, "product_position_id":item.get('product_id'),\
                                                             "quantity": item.get('quantity')})
    
-                objects_created += 1
+                objects_created += created
 
                     
             return JsonResponse({'Status': True, 'Create objects': objects_created})
@@ -280,10 +282,10 @@ class BasketView(ModelViewSet):
             basket, _ = Order.objects.get_or_create(user_id=request.user.id, status='1')
             objects_updated = 0
             for item in items_list:
-                Order_rec.objects.update_or_create(product_position_id = item.get('product_id'), order_id=basket.id, \
+                _, updated = Order_rec.objects.update_or_create(product_position_id = item.get('product_id'), order_id=basket.id, \
                                                    defaults= {"quantity": item.get('quantity')})
    
-                objects_updated += 1
+                objects_updated += updated
 
             return JsonResponse({'Status': True, 'Objects updated': objects_updated})
         
@@ -300,7 +302,73 @@ class BasketView(ModelViewSet):
 
         return JsonResponse({'Status': True, 'Deleted objects': objects_deleted})
 
+class DoOrders(ModelViewSet):
+    serializer_class = OrderSerializer
+    filter_backends = [DjangoFilterBackend]
+    permission_classes = [IsAuthenticated]
 
-           
+    def get_queryset(self):
+        vals = Order.objects.exclude(status = '1').filter(user_id = self.request.user.id).prefetch_related("prod_position").\
+            annotate(total_sum=Sum(F('order_recs__quantity') * F('order_recs__product_position__price'))).distinct()
+        if vals.count() != 0:
+            return vals
+        else:
+            res = ValidationError("Активных заказов нет!")
+            res.status_code = status.HTTP_204_NO_CONTENT
+            raise res
+        
+    def create(self,request,*args,**kwargs):
+        if self.request.user.__getattribute__('type') != '1':
+            raise  ValidationError("Только под учетной записью клиента магазина можно работать с корзиной!")
+        elif {'order_id','loc_address_id'}.issubset(request.data):
+            rec_id = Order.objects.prefetch_related("prod_position").\
+                filter(user_id = request.user.id, id = request.data.get('order_id'), status = '1'). \
+                        update(status="2", loc_address_id= request.data.get('loc_address_id'))
+
+            if rec_id:
+                # for pos_id in Order_rec.objects.filter(order_id = request.data.get('order_id')).values_list('product_position_id', flat =True):
+                #    Product_positions.objects.filter(id = pos_id).prefetch_related("product_record").update(quantity_reserve = F('product_record__quantity'))
+                new_order.send(sender=self.__class__, user_id=request.user.id)
+
+            return JsonResponse({'Status': True, "Updated":rec_id})
+        else:
+            return JsonResponse({'Status': False, 'Errors': 'Not all needed arguments'})
+
+
+
+        
+class ShopOrders(ModelViewSet):
+    serializer_class = OrderSerializer
+    filter_backends = [DjangoFilterBackend]
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        if self.request.user.__getattribute__('type') != '2':
+            raise  ValidationError("Получение заказов доступно только для учетных записей продавцов!")
+        else:
+            return Order.objects.filter(order_recs__product_position__shop__user_id = self.request.user.id).exclude(status = '1').\
+            prefetch_related('order_recs__product_position__params',
+            'order_recs__product_position__product__category').select_related('loc_address').annotate(
+                total_sum=Sum(F('order_recs__quantity') * F('order_recs__product_position__price'))
+            ).distinct()
+        
+    def create(self, request, *args, **kwargs):
+            raise MethodNotAllowed('POST')
+    
+    def delete(self,request):
+        raise MethodNotAllowed('DELETE')
+
+
+    def update(self, request, *args, **kwargs):
+        if self.request.user.__getattribute__('type') != '2':
+            raise  ValidationError("Получение заказов доступно только для учетных записей продавцов!")
+        else:
+            if request.data.get('status') == 1:
+                raise ValidationError("Невозможна установка статуса Корзина")
+            Order.objects.filter(id = request.data.get('order_id'), order_recs__product_position__shop__user_id = self.request.user.id).\
+                exclude(status ='1').update(status = request.data.get('status'))
+            
+            return super().update(request, *args, **kwargs)
+
 
     

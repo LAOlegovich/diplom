@@ -17,7 +17,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from backend.views import ShopView, CategoryView, UploadCatalog, RegisterAccount, ConfirmAccount,LoginAccount,Location_addressView, ProductInfoView, BasketView
+from backend.views import ShopView, CategoryView, UploadCatalog, RegisterAccount, ConfirmAccount,LoginAccount,Location_addressView, ProductInfoView, \
+BasketView, DoOrders,ShopOrders
 
 from rest_framework.routers import DefaultRouter
 from django.urls import path, include
@@ -27,7 +28,9 @@ router.register('user-addresses',Location_addressView, 'view-addresses')
 router.register('shops', ShopView, 'view-shops')
 router.register('categories', CategoryView, 'view-category'),
 router.register('products', ProductInfoView, 'view-prod-info'),
-router.register('basket',BasketView, 'view-basket')
+router.register('basket',BasketView, 'view-basket'),
+router.register('user/orders',DoOrders, 'view-orders'),
+router.register('adminshops',ShopOrders,'admin-shop')
 
 urlpatterns = [
     path('admin/', admin.site.urls),

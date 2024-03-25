@@ -170,6 +170,9 @@ class Order(models.Model):
     prod_position = models.ManyToManyField("Product_positions", through= "Order_rec")
     time_order = models.DateTimeField(auto_now_add = True)
     status = models.CharField(max_length=1, choices=STAT_OF_ORDER, verbose_name = 'Статус заказа',default = '1')
+    loc_address = models.ForeignKey("Location_address", verbose_name='Адрес расположения',
+                                blank=True, null=True,
+                                on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = "Корзина заказа"

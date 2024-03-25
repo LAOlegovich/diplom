@@ -30,7 +30,7 @@ POST {{baseUrl}}/user/login
 Content-Type: application/json
 
 {
-"email":"lit25111987@gmail.com",
+"email":"ao-litvinenko@yandex.ru",
 "password":"1234@fdfd"
 }
 ###
@@ -39,8 +39,8 @@ POST {{baseUrl}}/user/register/confirm
 Content-Type: application/json
 
 {
-"email":"lit25111987@gmail.com",
-"token":"4f8baf4dd19ddaa1012cf96bc75006a366"
+"email":"ao-litvinenko@yandex.ru",
+"token":"c15450d3a42123bcc31882201010d4b0e74d95e44b33e"
 
 }
 ###
@@ -107,12 +107,21 @@ Content-Type: application/json
 Authorization: Token 4f88de02ff8d92c8ea1b08c1ecd6836b9655db30
 
 {
+"state":"False"
+}
+###
+# 
+PATCH {{baseUrl}}/shops/17/
+Content-Type: application/json
+Authorization: Token 4f88de02ff8d92c8ea1b08c1ecd6836b9655db30
+
+{
   "name":"Mamba_bunba_yes",
   "address":"Мытищи, Колонцова,2",
   "categories": [
     {"name":"Телефон"}, 
     {"name": "Ноутбук_"},
-    {"name":"Телевизоры", "slug_name":"TV"}
+    {"name":"Телевизоры_"}
     ] 
 }
 ###
@@ -171,5 +180,48 @@ Authorization: Token 4f88de02ff8d92c8ea1b08c1ecd6836b9655db30
 
 {
   "items": [9,13]
+}
+###
+# 
+POST {{baseUrl}}/basket/
+Content-Type: application/json
+Authorization: Token f33fe57297ad729b0163445905e1ba24e34c9d16
+
+{
+  "items": [
+	{"product_id":  10,	"quantity": 2},
+	{"product_id":  11,	"quantity": 5}
+]
+
+}
+### 
+GET {{baseUrl}}/user/orders/
+Content-Type: application/json
+Authorization: Token f33fe57297ad729b0163445905e1ba24e34c9d16
+
+###
+
+POST {{baseUrl}}/user/orders/
+Content-Type: application/json
+Authorization: Token f33fe57297ad729b0163445905e1ba24e34c9d16
+
+{
+"order_id":8,
+"loc_address_id":3
+}
+###
+GET {{baseUrl}}/adminshops/
+Content-Type: application/json
+Authorization: Token 4f88de02ff8d92c8ea1b08c1ecd6836b9655db30
+
+###
+PATCH {{baseUrl}}/adminshops/8/
+Content-Type: application/json
+Authorization: Token 4f88de02ff8d92c8ea1b08c1ecd6836b9655db30
+
+{
+  "order_id":8,
+  "status":5
+  
 }
 ###

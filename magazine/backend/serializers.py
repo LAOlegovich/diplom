@@ -1,6 +1,6 @@
 from rest_framework.exceptions import ValidationError
 
-from .models import Order, Order_rec,Product,Product_positions, Shop,Category, User, Parameter, Location_address,ProductParams,TYPE_OF_USER
+from .models import Order, Order_rec,Product,Product_positions, Shop,Category, User, Parameter, Location_address,ProductParams,TYPE_OF_USER, STAT_OF_ORDER
 
 import rest_framework
 
@@ -12,9 +12,7 @@ class UserSerializer(rest_framework.serializers.ModelSerializer):
             if t[0] == obj.type:
                 rep['type'] = t[1]
                 return rep
-            else:
-                rep['type'] = 'unknown'
-                return rep
+
     class Meta:
         model = User
         fields= ['username','first_name','last_name','email']
@@ -28,38 +26,38 @@ class CategorySerializer(rest_framework.serializers.ModelSerializer):
 
 class ShopSerializer(rest_framework.serializers.ModelSerializer):
     user = UserSerializer(read_only = True)
-    categories = CategorySerializer(many = True)
+    categories = CategorySerializer(many = True, required = False)
 
     def create(self, validated_data):
         """Метод для создания"""
-        categories = validated_data.pop('categories')
+        categories = validated_data.pop('categories', None)
         validated_data["user"] = self.context["request"].user
         #return super().create(validated_data)
         shop,_ = Shop.objects.get_or_create(**validated_data)
-                                             
-        for category in categories:
-            name_ = category['name']
-            slug_name_ = category.get("slug_name")
-            categ,_ = Category.objects.get_or_create(name = name_,  slug_name = slug_name_)
-            categ.shops.add(shop.id)
-            categ.save()
+        if categories != None:                                    
+            for category in categories:
+                name_ = category['name']
+                slug_name_ = category.get("slug_name")
+                categ,_ = Category.objects.get_or_create(name = name_,  slug_name = slug_name_)
+                categ.shops.add(shop.id)
+                categ.save()
                                                                                                                       
         return shop
     
     def update(self, instance, validated_data):
         # достаем связанные данные для других таблиц
-        categories = validated_data.pop('categories')
+        categories = validated_data.pop('categories', None)
 
         # обновляем склад по его параметрам
         shop = super().update(instance, validated_data)
-
-        for category in categories:
-            name_ = category['name']
-            slug_name_ = category.get("slug_name")
+        if categories != None:
+            for category in categories:
+                name_ = category['name']
+                slug_name_ = category.get("slug_name")
            
-            categ,_=Category.objects.update_or_create(name= name_, slug_name = slug_name_)
-            categ.shops.add(shop.id)
-            categ.save()
+                categ,_=Category.objects.update_or_create(name= name_, slug_name = slug_name_)
+                categ.shops.add(shop.id)
+                categ.save()
        
         return shop
 
@@ -119,15 +117,6 @@ class Order_recSerializer(rest_framework.serializers.ModelSerializer):
 class MyOrder_recSerializer(Order_recSerializer):
     product_position = Product_positionSerializer(read_only = True)
 
-class OrderSerializer(rest_framework.serializers.ModelSerializer):
-    order_recs = MyOrder_recSerializer(many=True, read_only=True)
-   
-    class Meta:
-        model = Order
-        fields =['id','time_order','status','order_recs']
-        read_only_fields= ('id','time_order',)
-
-
 class Location_addressSerializer(rest_framework.serializers.ModelSerializer):
     user = UserSerializer(read_only = True)
 
@@ -162,3 +151,21 @@ class Location_addressSerializer(rest_framework.serializers.ModelSerializer):
 
         return data
     
+class OrderSerializer(rest_framework.serializers.ModelSerializer):
+    order_recs = MyOrder_recSerializer(many=True, read_only=True)
+    total_sum = rest_framework.serializers.IntegerField(required = False)
+    loc_address = Location_addressSerializer(read_only=True)
+   
+    class Meta:
+        model = Order
+        fields =['id','time_order','status','order_recs','total_sum','loc_address']
+        read_only_fields= ('id','time_order',)
+
+    def to_representation(self,obj):   
+        rep= super(OrderSerializer,self).to_representation(obj)          
+        for t in STAT_OF_ORDER:
+            if t[0] == obj.status:
+                rep['status'] = t[1]
+                return rep
+    
+        
