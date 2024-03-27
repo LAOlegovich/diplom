@@ -17,6 +17,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+from django_rest_passwordreset.views import reset_password_confirm, reset_password_request_token
+
 from backend.views import ShopView, CategoryView, UploadCatalog, RegisterAccount, ConfirmAccount,LoginAccount,Location_addressView, ProductInfoView, \
 BasketView, DoOrders,ShopOrders
 
@@ -36,7 +38,9 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
     path('updatecatalog', UploadCatalog.as_view(), name = 'upload-catalog'),
-    path('user/register', RegisterAccount.as_view(), name = 'register-user'),
-    path('user/register/confirm', ConfirmAccount.as_view(),name = 'confirmation-account'),
-    path('user/login', LoginAccount.as_view(), name='user-login')
+    path('user/register', RegisterAccount.as_view(), name = 'user-register'),
+    path('user/register/confirm', ConfirmAccount.as_view(),name = 'user-register-confirm'),
+    path('user/login', LoginAccount.as_view(), name='user-login'),
+    path('user/password_reset',reset_password_request_token, name = 'password-reset'),
+    path('user/password_reset/confirm', reset_password_confirm, name = 'password-reset-confirm')
 ]+ router.urls

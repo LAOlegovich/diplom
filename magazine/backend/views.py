@@ -1,5 +1,4 @@
 from django.shortcuts import render
-from rest_framework.generics import ListAPIView
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
@@ -11,7 +10,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 from backend.signals import new_user_registered, new_order
-from .models import Order_rec, Order, Product, Product_positions, Shop, Category, Parameter, ProductParams, ConfirmEmailToken, Location_address
+from .models import Order_rec, Order, Product, Product_positions, Shop, Category, Parameter, ProductParams, ConfirmEmailToken, Location_address,STAT_OF_ORDER
 
 from .serializers import OrderSerializer, Product_positionSerializer, ShopSerializer, CategorySerializer,UserSerializer,\
     Location_addressSerializer
@@ -327,8 +326,10 @@ class DoOrders(ModelViewSet):
 
             if rec_id:
                 # for pos_id in Order_rec.objects.filter(order_id = request.data.get('order_id')).values_list('product_position_id', flat =True):
-                #    Product_positions.objects.filter(id = pos_id).prefetch_related("product_record").update(quantity_reserve = F('product_record__quantity'))
-                new_order.send(sender=self.__class__, user_id=request.user.id)
+                #     quantity = Order_rec.objects.filter(product_position_id = pos_id).values_list('quantity', flat= True)
+                #     Product_positions.objects.filter(id = pos_id).update(quantity_reserve = F('quantity_reserve')+quantity)
+                dict = {'status':"Новый", "order_id":request.data.get('order_id')}
+                new_order.send(sender=self.__class__, user_id=request.user.id, **dict)
 
             return JsonResponse({'Status': True, "Updated":rec_id})
         else:
@@ -367,6 +368,9 @@ class ShopOrders(ModelViewSet):
                 raise ValidationError("Невозможна установка статуса Корзина")
             Order.objects.filter(id = request.data.get('order_id'), order_recs__product_position__shop__user_id = self.request.user.id).\
                 exclude(status ='1').update(status = request.data.get('status'))
+            dict = {'status':(val[1] for val in STAT_OF_ORDER if request.data.get('status')== int(val[0])),
+                    "order_id":request.data.get('order_id')}
+            new_order.send(sender=self.__class__, user_id=request.user.id, **dict)
             
             return super().update(request, *args, **kwargs)
 

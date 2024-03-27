@@ -68,12 +68,18 @@ def new_order_signal(user_id, **kwargs):
     """
     # send an e-mail to the user
     user = User.objects.get(id=user_id)
+    mes = kwargs.get('status', None)
+    numb = kwargs.get('order_id', '')
+    if mes == None:
+        mes = 'Заказ сформирован'
+    else:
+        mes = f'У вашего заказа №{numb} обновлен статус на - {mes}'
 
     msg = EmailMultiAlternatives(
         # title:
         f"Обновление статуса заказа",
         # message:
-        'Заказ сформирован',
+        mes,
         # from:
         settings.EMAIL_HOST_USER,
         # to:
