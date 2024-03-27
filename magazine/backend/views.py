@@ -56,9 +56,6 @@ class UploadCatalog(APIView):
 
             id_user = Shop.objects.filter(name = data['shop']).values_list('user_id', flat=True)
 #как раз то самое условие, про которое написано выше, 3 тип -администратор площадки.
-            print('id_user is ',id_user.first())
-            print('request user type is ',request.user.type)
-            print('request user id is ',request.user.id)
             if request.user.type == 1 or request.user.type == 2 and request.user.id != id_user and id_user.first() is not None:
                 return JsonResponse({'Status':'Bad request', 
                                      'Error':'User has no rights'})
