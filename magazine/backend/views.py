@@ -56,12 +56,15 @@ class UploadCatalog(APIView):
 
             id_user = Shop.objects.filter(name = data['shop']).values_list('user_id', flat=True)
 #как раз то самое условие, про которое написано выше, 3 тип -администратор площадки.
-            if request.user.type == ('1') or request.user.type == ('2') and request.user.id != id_user and id_user.first() is not None:
+            print('id_user is ',id_user.first())
+            print('request user type is ',request.user.type)
+            print('request user id is ',request.user.id)
+            if request.user.type == 1 or request.user.type == 2 and request.user.id != id_user and id_user.first() is not None:
                 return JsonResponse({'Status':'Bad request', 
                                      'Error':'User has no rights'})
             shop_obj, _ = Shop.objects.get_or_create(name = data['shop'], user_id = request.user.id)
             for category in data['categories']:
-                cat_obj, _ = Category.objects.get_or_create(id= category['id'], name = category['name'])
+                cat_obj, _ = Category.objects.get_or_create(name = category['name']) #id= category['id'] 
                 cat_obj.shops.add(shop_obj.id)
                 cat_obj.save()
             Product_positions.objects.filter(shop_id = shop_obj.id).delete()
