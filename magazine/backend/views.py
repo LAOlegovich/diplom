@@ -306,7 +306,16 @@ class DoOrders(ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     permission_classes = [IsAuthenticated]
 
+    def test_quantity_reserve(self,request):
+        """ Процедура проверки наличия незарезервированных позиций товара в магазине, достаточных для реализации данного заказа"""
+        for rec in Order_rec.objects.filter(order_id = request.data.get('order_id'), status ='1').select_related('product_position').\
+            values_list('quantity','product_position__quantity','product_position__product__name','product_position__quantity_reserve'):
+            if rec[0] > rec[1]-rec[3]:
+                return {'status':False, 'product':rec[2]}
+            return  {'status':True}
+
     def get_queryset(self):
+
         vals = Order.objects.exclude(status = '1').filter(user_id = self.request.user.id).prefetch_related("prod_position").\
             annotate(total_sum=Sum(F('order_recs__quantity') * F('order_recs__product_position__price'))).distinct()
         if vals.count() != 0:
@@ -320,14 +329,20 @@ class DoOrders(ModelViewSet):
         if self.request.user.__getattribute__('type') != '1':
             raise  ValidationError("Только под учетной записью клиента магазина можно работать с корзиной!")
         elif {'order_id','loc_address_id'}.issubset(request.data):
+            if not self.test_quantity_reserve(request).get('status'):
+                prod_name= self.test_quantity_reserve(request).get('product')
+                raise ValidationError('Количество заказываемого товара /'+ str(prod_name) + 
+                                       '/ больше имеющегося в наличии!')  
+
             rec_id = Order.objects.prefetch_related("prod_position").\
                 filter(user_id = request.user.id, id = request.data.get('order_id'), status = '1'). \
                         update(status="2", loc_address_id= request.data.get('loc_address_id'))
 
             if rec_id:
-                # for pos_id in Order_rec.objects.filter(order_id = request.data.get('order_id')).values_list('product_position_id', flat =True):
-                #     quantity = Order_rec.objects.filter(product_position_id = pos_id).values_list('quantity', flat= True)
-                #     Product_positions.objects.filter(id = pos_id).update(quantity_reserve = F('quantity_reserve')+quantity)
+                for pos_id in Order_rec.objects.filter(order_id = request.data.get('order_id')).values_list('product_position_id', flat =True):
+                    quantity = Order_rec.objects.filter(product_position_id = pos_id).values_list('quantity', flat= True)
+                    Product_positions.objects.filter(id = pos_id).update(quantity_reserve = F('quantity_reserve')+quantity)
+
                 dict = {'status':"Новый", "order_id":request.data.get('order_id')}
                 new_order.send(sender=self.__class__, user_id=request.user.id, **dict)
 
@@ -342,6 +357,20 @@ class ShopOrders(ModelViewSet):
     serializer_class = OrderSerializer
     filter_backends = [DjangoFilterBackend]
     permission_classes = [IsAuthenticated]
+
+    def test_quantity_update(self,request):
+        """ Процедура проверки возможности выполнения заказа со стороны магазина
+            (по каждой позиции необходимое количество должно быть в наличии)
+        """
+        if request.data.get('status') == 3:
+            # Статус -3 - "Подтвержден"
+            for rec in Order_rec.objects.filter(order_id = request.data.get('order_id')).select_related('product_position').\
+                values_list('quantity','product_position__quantity','product_position__product__name'):
+                if rec[0] > rec[1]:
+                    return {'status':False, 'product':rec[2]}
+            return  {'status':True}
+        else:
+            return  {'status':True}
 
     def get_queryset(self):
         if self.request.user.__getattribute__('type') != '2':
@@ -364,15 +393,33 @@ class ShopOrders(ModelViewSet):
         if self.request.user.__getattribute__('type') != '2':
             raise  ValidationError("Получение заказов доступно только для учетных записей продавцов!")
         else:
-            if request.data.get('status') == 1:
-                raise ValidationError("Невозможна установка статуса Корзина")
-            Order.objects.filter(id = request.data.get('order_id'), order_recs__product_position__shop__user_id = self.request.user.id).\
+            if request.data.get('status') in (1,2):
+                raise ValidationError("Невозможна установка статусов Корзина или Новый")
+            if not self.test_quantity_update(request).get('status'):
+                prod_name= self.test_quantity_update(request).get('product')
+                raise ValidationError('Количество запрошенного товара /'+ str(prod_name) + 
+                                       '/ больше имеющегося в наличии, подтверждение невозможно!')
+
+            cnt_update = Order.objects.filter(id = request.data.get('order_id'), order_recs__product_position__shop__user_id = self.request.user.id).\
                 exclude(status ='1').update(status = request.data.get('status'))
+            if request.data.get('status') == 3:
+                for rec in Order_rec.objects.filter(order_id = request.data.get('order_id'),product_position__shop__user_id = self.request.user.id).\
+                    values_list('quantity','product_position_id'):
+                    Product_positions.objects.filter(id = rec[1]).update(quantity = F('quantity')-rec[0],
+                                                                          quantity_reserve = F('quantity_reserve')- rec[0])
+
             dict = {'status':(val[1] for val in STAT_OF_ORDER if request.data.get('status')== int(val[0])),
                     "order_id":request.data.get('order_id')}
-            new_order.send(sender=self.__class__, user_id=request.user.id, **dict)
+            if cnt_update > 0:
+                new_order.send(sender=self.__class__, user_id=request.user.id, **dict)
+            
             
             return super().update(request, *args, **kwargs)
+        
+
+        
+
+
 
 
     
