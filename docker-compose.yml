@@ -1,0 +1,71 @@
+version: '3.8'
+
+
+services:
+    db:
+        image: "postgres:latest"
+            
+        volumes:
+            - postgres_volume:/var/lib/postgresql/data/
+        env_file:
+            - ./.env.dev
+                
+        networks:
+            - my_net 
+            - test_net
+        healthcheck:
+            test: ["CMD-SHELL","pg_isready -U postgres -d magazine_db"]
+            interval: 1m30s
+            timeout: 30s
+            retries: 5
+            start_period: 30s
+    
+    web:
+        build: ./magazine 
+        command: sh ./com.sh
+        ports:
+            - "8080:8080" 
+        expose:
+            - 8080
+        env_file:
+            - ./magazine/magazine/.env
+        networks:
+            - my_net
+        depends_on:
+            - db
+
+    pg_admin:
+        image: "dpage/pgadmin4:latest"
+        ports:
+            - 7070:80
+        restart: unless-stopped
+        deploy:
+            resources:
+                limits:
+                    cpus: '0.5'
+                    memory: 1G
+        environment:
+            PGADMIN_DEFAULT_EMAIL: "admin@yandex.ru"
+            PGADMIN_DEFAULT_PASSWORD: "admin1pwd"
+            PGADMIN_DEFAULT_CONFIG_SERVER_MODE: "False"
+        networks:
+            - test_net
+
+    redis:
+        image: "redis"
+        container_name: "redis"
+        hostname: "redis"
+        ports:
+            - "6379:6379"
+        networks:
+            - my_net
+
+
+volumes:
+    postgres_volume: 
+    static_volume:
+    media_volume:
+    
+networks:
+    my_net:
+    test_net:

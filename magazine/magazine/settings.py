@@ -87,12 +87,12 @@ WSGI_APPLICATION = 'magazine.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'magazine_db',
-        'HOST': '127.0.0.1',
-        'PORT': '5432',
-        'USER':'postgres',
-        'PASSWORD':'1234'
+        'ENGINE': env.str('POSTGRES_ENGINE', default= 'django.db.backends.postgresql'),
+        'NAME': env.str('POSTGRES_DB', default= 'magazine_db'),
+        'HOST': env.str('POSTGRES_HOST', default= '127.0.0.1'),
+        'PORT': env.str('POSTGRES_PORT', default= '5432'),
+        'USER':env.str('POSTGRES_USER', default= 'postgres'),
+        'PASSWORD':env.str('POSTGRES_PASSWORD', default= '1234')
     }
 }
 
@@ -158,3 +158,6 @@ REST_FRAMEWORK = {
 'DEFAULT_FILTER_BACKENDS':
 ['django_filters.rest_framework.DjangoFilterBackend',]
 }
+
+CELERY_BROKER_URL = "redis://redis:6379/1"
+CELERY_RESULT_BACKEND = "redis://redis:6379/2"

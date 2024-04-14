@@ -37,7 +37,6 @@ router.register('adminshops',ShopOrders,'admin-shop')
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
-    path('updatecatalog', UploadCatalog.as_view(), name = 'upload-catalog'),
     path('user/register', RegisterAccount.as_view(), name = 'user-register'),
     path('user/register/confirm', ConfirmAccount.as_view(),name = 'user-register-confirm'),
     path('user/login', LoginAccount.as_view(), name='user-login'),

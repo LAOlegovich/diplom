@@ -22,6 +22,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q, F, Sum
 from rest_framework.exceptions import ValidationError
 
+from backend.tasks import update_catalog,send_email_new_user
+
 # Create your views here.
 
 class ShopView(ModelViewSet):
@@ -59,27 +61,28 @@ class UploadCatalog(APIView):
             if request.user.type == 1 or request.user.type == 2 and request.user.id != id_user and id_user.first() is not None:
                 return JsonResponse({'Status':'Bad request', 
                                      'Error':'User has no rights'})
-            shop_obj, _ = Shop.objects.get_or_create(name = data['shop'], user_id = request.user.id)
-            for category in data['categories']:
-                cat_obj, _ = Category.objects.get_or_create(name = category['name']) #id= category['id'] 
-                cat_obj.shops.add(shop_obj.id)
-                cat_obj.save()
-            Product_positions.objects.filter(shop_id = shop_obj.id).delete()
-            for el in data['goods']:
-                prod_obj,_ = Product.objects.get_or_create(name = el['name'], category_id= el['category'],model = el['model'])
-                prod_pos_obj = Product_positions.objects.create(
-                    product_id = prod_obj.id,
-                    price = el['price'],
-                    price_rrc = el['price_rrc'],
-                    quantity = el['quantity'],
-                    shop_id = shop_obj.id
-                )
-                for name_,value_ in el['parameters'].items():
-                    param_obj, _ = Parameter.objects.get_or_create(name = name_)
-                    ProductParams.objects.create(product_position_id = prod_pos_obj.id,
-                                             parameter_id = param_obj.id,
-                                             value = value_
-                                             )
+            update_catalog.delay(data, request.user.id)
+            # shop_obj, _ = Shop.objects.get_or_create(name = data['shop'], user_id = request.user.id)
+            # for category in data['categories']:
+            #     cat_obj, _ = Category.objects.get_or_create(name = category['name']) #id= category['id'] 
+            #     cat_obj.shops.add(shop_obj.id)
+            #     cat_obj.save()
+            # Product_positions.objects.filter(shop_id = shop_obj.id).delete()
+            # for el in data['goods']:
+            #     prod_obj,_ = Product.objects.get_or_create(name = el['name'], category_id= el['category'],model = el['model'])
+            #     prod_pos_obj = Product_positions.objects.create(
+            #         product_id = prod_obj.id,
+            #         price = el['price'],
+            #         price_rrc = el['price_rrc'],
+            #         quantity = el['quantity'],
+            #         shop_id = shop_obj.id
+            #     )
+            #     for name_,value_ in el['parameters'].items():
+            #         param_obj, _ = Parameter.objects.get_or_create(name = name_)
+            #         ProductParams.objects.create(product_position_id = prod_pos_obj.id,
+            #                                  parameter_id = param_obj.id,
+            #                                  value = value_
+            #                                  )
             return JsonResponse({'Status': 'OK'})
         else:
             return JsonResponse({'Status':'Bad request', 'Error':'Incorrect structure of file'})
@@ -124,6 +127,7 @@ class RegisterAccount(APIView):
                     # сохраняем пользователя
                     user = user_serializer.save()
                     user.set_password(request.data['password'])
+                    send_email_new_user.delay(user.id)
                     user.save()
                     return JsonResponse({'Status': True})
                 else:
