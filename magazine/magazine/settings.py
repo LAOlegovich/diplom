@@ -158,3 +158,6 @@ REST_FRAMEWORK = {
 'DEFAULT_FILTER_BACKENDS':
 ['django_filters.rest_framework.DjangoFilterBackend',]
 }
+
+CELERY_BROKER_URL = "redis://redis:6379/1"
+CELERY_RESULT_BACKEND = "redis://redis:6379/2"

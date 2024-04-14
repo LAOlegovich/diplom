@@ -23,10 +23,6 @@ services:
     web:
         build: ./magazine 
         command: sh ./com.sh
-
-        volumes:
-            - static_volume:/usr/src/app/static
-            - media_volume:/usr/src/app/media
         ports:
             - "8080:8080" 
         expose:
@@ -54,6 +50,16 @@ services:
             PGADMIN_DEFAULT_CONFIG_SERVER_MODE: "False"
         networks:
             - test_net
+
+    redis:
+        image: "redis"
+        container_name: "redis"
+        hostname: "redis"
+        ports:
+            - "6379:6379"
+        networks:
+            - my_net
+
 
 volumes:
     postgres_volume: 
