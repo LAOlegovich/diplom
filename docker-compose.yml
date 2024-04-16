@@ -60,6 +60,35 @@ services:
         networks:
             - my_net
 
+    worker:
+        build: ./magazine 
+        hostname: "worker"
+        entrypoint: celery
+        command: -A magazine worker -l info
+        links:
+            - redis
+        depends_on:
+            - redis
+        networks:
+         - my_net
+         - test_net
+
+    flower:
+        image: "mher/flower"
+        container_name: "flower"
+        environment:
+            - FLOWER_PORT=8888
+        ports:
+            - 8888:8888
+        links:
+            - redis
+            - worker
+        depends_on:
+            - redis
+            - worker
+        networks:
+            - test_net 
+
 
 volumes:
     postgres_volume: 
