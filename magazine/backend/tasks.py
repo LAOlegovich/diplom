@@ -7,15 +7,14 @@ from django.core.mail import EmailMultiAlternatives
 
 @shared_task
 def update_catalog(data,user_id):
-
     shop_obj, _ = Shop.objects.get_or_create(name = data['shop'], user_id = user_id)
     for category in data['categories']:
-        cat_obj, _ = Category.objects.get_or_create(name = category['name']) #id= category['id'] 
+        cat_obj, _ = Category.objects.get_or_create(name = category['name'], id= category['id'])
         cat_obj.shops.add(shop_obj.id)
         cat_obj.save()
     Product_positions.objects.filter(shop_id = shop_obj.id).delete()
     for el in data['goods']:
-        prod_obj,_ = Product.objects.get_or_create(name = el['name'], category_id= el['category'],model = el['model'])
+        prod_obj,_ = Product.objects.get_or_create(name = el['name'], category_id= el['category'], model = el['model'])
         prod_pos_obj = Product_positions.objects.create(
             product_id = prod_obj.id,
             price = el['price'],
