@@ -61,28 +61,28 @@ def password_reset_token_created(sender, instance, reset_password_token, **kwarg
 #         msg.send()
 
 
-@receiver(new_order)
-def new_order_signal(user_id, **kwargs):
-    """
-    отправяем письмо при изменении статуса заказа
-    """
-    # send an e-mail to the user
-    user = User.objects.get(id=user_id)
-    mes = kwargs.get('status', None)
-    numb = kwargs.get('order_id', '')
-    if mes == None:
-        mes = 'Заказ сформирован'
-    else:
-        mes = f'У вашего заказа №{numb} обновлен статус на - {mes}'
+#@receiver(new_order)
+# def new_order_signal(user_id, **kwargs):
+#     """
+#     отправяем письмо при изменении статуса заказа
+#     """
+#     # send an e-mail to the user
+#     user = User.objects.get(id=user_id)
+#     mes = kwargs.get('status', None)
+#     numb = kwargs.get('order_id', '')
+#     if mes == None:
+#         mes = 'Заказ сформирован'
+#     else:
+#         mes = f'У вашего заказа №{numb} обновлен статус на - {mes}'
 
-    msg = EmailMultiAlternatives(
-        # title:
-        f"Обновление статуса заказа",
-        # message:
-        mes,
-        # from:
-        settings.EMAIL_HOST_USER,
-        # to:
-        [user.email]
-    )
-    msg.send()
+#     msg = EmailMultiAlternatives(
+#         # title:
+#         f"Обновление статуса заказа",
+#         # message:
+#         mes,
+#         # from:
+#         settings.EMAIL_HOST_USER,
+#         # to:
+#         [user.email]
+#     )
+#     msg.send()

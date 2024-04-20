@@ -9,7 +9,7 @@ from requests import get
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
-from backend.signals import new_user_registered, new_order
+#from backend.signals import new_user_registered, new_order
 from .models import Order_rec, Order, Product, Product_positions, Shop, Category, Parameter, ProductParams, ConfirmEmailToken, Location_address,STAT_OF_ORDER
 
 from .serializers import OrderSerializer, Product_positionSerializer, ShopSerializer, CategorySerializer,UserSerializer,\
@@ -22,7 +22,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q, F, Sum
 from rest_framework.exceptions import ValidationError
 
-from backend.tasks import update_catalog,send_email_new_user
+from backend.tasks import update_catalog,send_email_new_user,new_order_signal
 
 # Create your views here.
 
@@ -312,7 +312,7 @@ class DoOrders(ModelViewSet):
 
     def test_quantity_reserve(self,request):
         """ Процедура проверки наличия незарезервированных позиций товара в магазине, достаточных для реализации данного заказа"""
-        for rec in Order_rec.objects.filter(order_id = request.data.get('order_id'), status ='1').select_related('product_position').\
+        for rec in Order_rec.objects.filter(order_id = request.data.get('order_id'), order__status ='1').select_related('product_position').\
             values_list('quantity','product_position__quantity','product_position__product__name','product_position__quantity_reserve'):
             if rec[0] > rec[1]-rec[3]:
                 return {'status':False, 'product':rec[2]}
@@ -348,7 +348,8 @@ class DoOrders(ModelViewSet):
                     Product_positions.objects.filter(id = pos_id).update(quantity_reserve = F('quantity_reserve')+quantity)
 
                 dict = {'status':"Новый", "order_id":request.data.get('order_id')}
-                new_order.send(sender=self.__class__, user_id=request.user.id, **dict)
+                #new_order.send(sender=self.__class__, user_id=request.user.id, **dict)
+                new_order_signal.delay(request.user.id, **dict)
 
             return JsonResponse({'Status': True, "Updated":rec_id})
         else:
@@ -412,10 +413,11 @@ class ShopOrders(ModelViewSet):
                     Product_positions.objects.filter(id = rec[1]).update(quantity = F('quantity')-rec[0],
                                                                           quantity_reserve = F('quantity_reserve')- rec[0])
 
-            dict = {'status':(val[1] for val in STAT_OF_ORDER if request.data.get('status')== int(val[0])),
+            dict = {"status": [val[1] for val in STAT_OF_ORDER if request.data.get('status')== int(val[0])],
                     "order_id":request.data.get('order_id')}
             if cnt_update > 0:
-                new_order.send(sender=self.__class__, user_id=request.user.id, **dict)
+                #new_order.send(sender=self.__class__, user_id=request.user.id, **dict)
+                new_order_signal.delay(request.user.id,**dict)
             
             
             return super().update(request, *args, **kwargs)

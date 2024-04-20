@@ -28,7 +28,7 @@ def update_catalog(data,user_id):
                                     parameter_id = param_obj.id,
                                     value = value_
                                     )
-            return 
+             
 
 @shared_task
 def send_email_new_user(user_id):
@@ -40,6 +40,33 @@ def send_email_new_user(user_id):
         f"Password Reset Token for {user.email}",
         # message:
         token.key,
+        # from:
+        settings.EMAIL_HOST_USER,
+        # to:
+        [user.email]
+    )
+    msg.send()
+
+
+@shared_task
+def new_order_signal(user_id, **kwargs):
+    """
+    отправяем письмо при изменении статуса заказа
+    """
+    # send an e-mail to the user
+    user = User.objects.get(id=user_id)
+    mes = kwargs.get('status', None)
+    numb = kwargs.get('order_id', '')
+    if mes == None:
+        mes = 'Заказ сформирован'
+    else:
+        mes = f'У вашего заказа №{numb} обновлен статус на - {mes}'
+
+    msg = EmailMultiAlternatives(
+        # title:
+        f"Обновление статуса заказа",
+        # message:
+        mes,
         # from:
         settings.EMAIL_HOST_USER,
         # to:

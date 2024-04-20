@@ -1,6 +1,6 @@
 # примеры API-запросов
 
-@baseUrl = http://127.0.0.1:8000
+@baseUrl = http://127.0.0.1:8080
 
 
 
@@ -47,7 +47,7 @@ Content-Type: application/json
 # 
 POST {{baseUrl}}/user-addresses/
 Content-Type: application/json
-Authorization: Token 4f88de02ff8d92c8ea1b08c1ecd6836b9655db30
+Authorization: Token 4515e0d17f6be3a714ba7a409eaa7ee8afe133b4
 
 {
   "telephone": "+7-805-546-76-00",
@@ -147,12 +147,12 @@ Authorization: Token 4f88de02ff8d92c8ea1b08c1ecd6836b9655db30
 # 
 POST {{baseUrl}}/basket/
 Content-Type: application/json
-Authorization: Token 4f88de02ff8d92c8ea1b08c1ecd6836b9655db30
+Authorization: Token 4515e0d17f6be3a714ba7a409eaa7ee8afe133b4
 
 {
   "items": [
-	{"product_id":  9,	"quantity": 2},
-	{"product_id":  11,	"quantity": 5}
+	{"product_id":  1,	"quantity": 2},
+	{"product_id":  3,	"quantity": 5}
 ]
 
 }
@@ -203,11 +203,11 @@ Authorization: Token f33fe57297ad729b0163445905e1ba24e34c9d16
 
 POST {{baseUrl}}/user/orders/
 Content-Type: application/json
-Authorization: Token f33fe57297ad729b0163445905e1ba24e34c9d16
+Authorization: Token 4515e0d17f6be3a714ba7a409eaa7ee8afe133b4
 
 {
-"order_id":8,
-"loc_address_id":3
+"order_id":1,
+"loc_address_id":1
 }
 ###
 GET {{baseUrl}}/adminshops/
@@ -215,12 +215,12 @@ Content-Type: application/json
 Authorization: Token 4f88de02ff8d92c8ea1b08c1ecd6836b9655db30
 
 ###
-PATCH {{baseUrl}}/adminshops/8/
+PATCH {{baseUrl}}/adminshops/1/
 Content-Type: application/json
-Authorization: Token 4f88de02ff8d92c8ea1b08c1ecd6836b9655db30
+Authorization: Token 4515e0d17f6be3a714ba7a409eaa7ee8afe133b4
 
 {
-  "order_id":8,
+  "order_id":1,
   "status":3
   
 }
