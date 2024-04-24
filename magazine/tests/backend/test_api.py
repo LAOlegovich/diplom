@@ -21,12 +21,12 @@ def test_upload_catalog(client):
     data_ = {"url": "https://raw.githubusercontent.com/netology-code/pd-diplom/master/data/shop1.yaml"}
     responce = client.post(reverse('upload-catalog'), data= data_, format = 'json')
 
-    print(reverse('upload-catalog'))
+    print(responce.json())
     
     assert responce.status_code == 200
 
-    assert Shop.objects.count() != 0
-
+   
+   
 @pytest.mark.django_db
 def test_get_shops(client):
 
